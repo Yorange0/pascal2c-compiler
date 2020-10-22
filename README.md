@@ -38,6 +38,7 @@
 | -version | 无 | 输出版本信息 | 
 | -help | 无 | 输出所有命令行参数的帮助信息 | 
 
+注：中括号表示该参数可有可无
 ## 编译器功能模块图
 ![](imgs/模块图.png)
 
@@ -260,3 +261,441 @@ C语言中一些基本的符号与PASCAL有所区别，例如C语言中的不等
 PASCAL中的复合语句块用begin和end包括，而在C语言中用花括号包括。
 
 代码生成的测试用例同整体测试，不再单独给出。
+
+## 总体设计
+语法分析调用词法分析得到记号序列，并分析生成抽象语法树。在抽象语法树上进行语义分析，建立和完善符号表，最后进行代码生成。
+
+具体到开发细节，用LEX生成词法分析程序（C++），该词法分析程序由语法分析程序调用生成记号序列，用YACC生成语法分析程序（C++），该语法分析程序可以生成语法分析树，然后用C++编写程序将语法分析树转化为抽象语法树，作为语法分析的最终输出，然后用C++编写语义分析和代码生成程序，最后将各部分代码整合在一起，生成一个完整的编译器。
+![](imgs/模块图2.png)
+
+### 模块划分
+#### 预处理
+- 输入
+    - PASCAL-S源程序文件
+- 输出
+    - 经过预处理的PASCAL-S程序文件
+- 功能
+    - PASCAL-S程序大小写不敏感，所以需要将所有字母转化为小写字母。
+#### 词法分析
+- 输入
+    - 经过预处理的PASCAL-S程序文件
+- 输出
+    - 记号序列
+- 功能
+    - 编译的整个过程从词法分析开始。从左至右逐个字符地对源程序进行扫描，按照源语言的词法规则识别出一个个单词符号，产生用于语法分析的记号序列。识别源程序中的注释和跳过空格。在遇到错误时，为了使词法分析程序能够继续运行下去，还要对出现的词法错误进行报告，并进行适当的恢复。
+#### 语法分析
+- 输入
+    - 记号序列
+- 输出
+    - 抽象语法树
+- 功能
+    - 语法分析程序的输入是词法分析程序在扫描字符串源程序的过程中识别并生成的记号序列，语法分析程序分析验证这个记号序列是不是符合该语言语法规则的一个程序，若是，则输出其语法分析树，并转化为抽象语法树，若不是，则表明输入的记号序列中存在语法错误，需要对语法错误进行适当的恢复，并报告错误的性质和位置。
+#### 语义分析
+- 输入
+    - 抽象语法树
+- 输出
+    - 抽象语法树、符号表
+- 功能
+    - 遍历抽象语法树，完成符号表的建立和操作、类型检查与转化、作用域识别等3个方面的内容，需要报告语义错误的性质和错误。
+#### 代码生成
+- 输入
+    - 抽象语法树、符号表
+- 输出
+    - C语言代码
+- 功能
+    - 遍历抽象语法树，并借助符号表的信息生成目标代码。
+
+### 运行逻辑设计
+编译器的运行设计主要针对错误的宏观处理，可以分为如下三种策略。
+```
+	（1）一旦发现任何一个错误，编译器立即终止运行。
+	（2）编译器尝试从各种错误中恢复过来，并完成整个编译过程。
+	（3）根据编译过程的模块划分，将错误恢复局限在一个模块中。即在任何一个模块中发现错误时，编译器将尝试从错误中恢复过来，并完成当前模块的处理，然后终止运行。
+
+	采用策略（1）时，每运行一次编译器，编译程序只能报告一个错误，编译人员的工作效率将大打折扣。
+	采用策略（2）时，极有可能出现错上加错的情况，导致后续的报错无法和源程序对应，给编译人员带来不必要的麻烦。
+	采用策略（3）时，编译人员可以一次处理成批的错误，工作效率较高，且报错信息准确。
+```
+因此，采用策略（3）并根据源程序的错误情况，可以将编译器的运行情况表示为下表：
+![](imgs/运行逻辑表.png)
+注：模块内部的接口设计、详细的错误处理方法，在详细设计中给出。
+### 数据结构设计
+#### 记号
+不同的记号有不同种类的属性，直观的想法是设计一个结构体，用不同类型的域去表示不同类型的属性，但是在词法和语法分析阶段，这些记号的属性的存储形式不会产生任何影响，因此记号的结构体中，直接用string类型去表示各种记号的属性，其具体类型的转换工作由后续模块进行。
+```c++
+1.	class node  
+2.	{  
+3.	    string token;  
+4.	    string value;  
+5.	};  
+```
+其中，token表示的是记号或非终结符号的名称，value表示的是属性值。例如表达式的token域是”EXPRESSION”，value域为空；例如一个常数的123.456的token域是”NUMBER”, value域是”123.456”。
+
+#### 语法分析树
+由于YACC的限制，我们将扩展记号的结构体，作为语法分析树的节点结构体。
+```c++
+1.	class node  
+2.	{  
+3.	    string token;  
+4.	    string value;  
+5.	    vector<class node*> children;  
+6.	};  
+```
+
+#### 抽象语法树
+由于篇幅限制，树结构中仅画出最重要的信息，具体内容参照节点类的定义代码。该部分文档也可能和代码有所出入，具体以代码为准。
+- 主程序(class _Program)
+![](imgs/主程序.png)
+主程序由程序名称标识符、参数列表、分程序构成，分别对应如上图所示的数据结构
+```c++
+1.	class _Program{ //主程序体语法树数据结构定义    
+2.	pair<string,int> programId;  //PASCAL程序名称标识符及行号 
+3.	vector< pair<string,int> > paralist; //标识符名称及行号
+4.	_Subprogram* subProgram;  //分程序  
+5.	};  
+```
+
+- 分程序(class _Subprogram)
+![](imgs/分程序.png)
+```c++
+1.	class _Subprogram{ //分程序定义语法树的数据结构定义  
+2.	vector<_Constant*> constList;  //常数定义列表
+3.	vector<_Variant*> variantList; //变量定义列表
+4.	vector<_FunctionDefinition*> subprogramDefinitionList;  //子程序和子函数
+5.	_Compound* compound; //主程序体
+6.	};  
+```
+
+- 常量定义(class _Constant)
+![](imgs/常量定义.png)
+常量是不可再往下细化的语法单位，因此在语法树中附加行号信息，为错误处理机制提供方便（接下来所有原子级语法单位语法树都将附加行号变量）。常量也有可能由别的常量标识符提供取值，因此种类除了char、int、real之外，还设置了string，用于表明提供常量值的常量标识符的ID。常量标识符前面可能没有符号，也可能有加号，也可能有减号，其中加号和没有符号的等价，因此需要再加一个bool变量isMinusShow用于表示前面是否出现了减号。因此这里的value并不一定是常量的真实值，还需考虑isMinusShow的取值。
+```c++
+1.	list<class _Constant*> consts; //常量定义列表  
+2.	class _Constant{  
+3.	    pair<string,int> constId;  //常量标识符及行号 
+4.	    string type; //int,char,real,string（这个string指的是常量标识符的ID）
+5.	    pair<string,int> valueId;
+6.	    char charValue;
+7.	    int intValue;
+8.	    float realValue;
+9.	    string strOfVal;  //所有常量取值的字符串表示
+10.	    bool isMinusShow; //是否出现减号
+11.	}; 
+```
+
+- 类型(class _Type)
+![](imgs/类型.png)
+如上图所示的语法树主要分析integer, real, boolean, char和array类型，类型标志flag用于指示该类型是否为array，是的话则为1，同时数组下界与上界被赋予有意义的数值；否则为0，且low和high变量的值无效。数组可以多维，vector的大小即维数，每一个pair为数组的上下界。
+```c++
+1.	class _Type{  
+2.	pair<string,int> type; //基本类型及行号，int、char、real、boolean 
+3.	int flag; //若是array则flag=1，否则flag=0  
+4.	vector<pair<int,int>> ar; //数组各维上下界
+5.	};  
+```
+
+- 变量(class _Variant)
+![](imgs/变量.png)
+```c++
+      1.	list<class _Variant*>vars; //变量列表  
+      2.	class _Variant{  
+      3.	pair<string,int> variantId;  //标识符及行号
+      4.	_Type* type; //类型
+      5.	};  
+```
+
+- 形式参数列表(class _FormalParameter)
+![](imgs/形式参数列表.png)
+参数分为引用和传值调用两种，根据是否包含var关键字来区分。
+```c++
+      1.	list<class para*> paralist; //参数列表  
+      2.	class _FormalParameter{  
+      3.	pair<string,int> paraId;  //形式参数标识符和行号
+      4.	string type; //形式参数类型，为基本类型
+      5.	int flag; //flag=0代表传值调用，flag=1代表引用调用  
+      6.	};  
+```
+
+- 函数/过程定义(class _FunctionDefinition)
+![](imgs/函数过程定义.png)
+在这里我们把过程和函数统一成了一个结构体，可以通过返回值字符串是否为空来判断是函数还是过程。
+```c++
+1.	list<class class _FunctionDefinition*> functions//函数或过程体的列表  
+2.	class _FunctionDefinition{//函数或过程体的语法树结构  
+3.	pair<string,int> functionId;  //函数/过程标识符及行号
+4.	vector<_FormalParameter*> formalParaList;  //形参列表
+5.	pair<string,int> type; ///如果type.first是空串，则为过程，否则为函数,取值为"integer","real","boolean","char"四种
+6.	vector<_Constant*> constList;  //常数定义列表
+7.	vector<_Variant*> variantList; //变量定义列表
+8.	_Compound* compound; //程序体
+9.	};  
+```
+
+- 函数调用(class _FunctionCall)
+![](imgs/函数调用.png)
+函数调用的参数列表是实际参数列表，与之前函数定义中的形式参数列表不同，这里的实际参数是一些表达式，因此加一个表达式结构体指针的线性表即可。
+```c++
+1.	class _FunctionCall{
+2.	    string functionid; //函数标识符及行号
+3.	    vector<_Expression*> actualParalist; //实参
+4.	}
+```
+
+- 变量引用(class _VariantReference)
+![](imgs/变量引用.png)
+```c++
+1.	class VariantReference{  
+2.	    pair<string,int> variantId;//变量标识符和行号  
+3.	    vector<_Expression*> expressionList;//各维的引用表达式  
+4.	    int flag;//0表示非数组,1表示数组  
+5.	}  
+```
+
+- 语句(class _Statement)
+![](imgs/语句.png)
+由于语句的种类很多，具有不同的语义和功能，不难想到利用C++继承、多态的性质进行数据结构的定义。
+
+首先，定义语句的纯虚类：class Statement。随后下面对不同的子类进行展开设计。
+
+```c++
+1.	class _Statement{  
+2.	    string type;
+3.	    //"compound","repeat","while","for","if","assign","procedure" 
+4.	    string statementType; ////区别于type，取值为"void"或"error"
+5.	    int lineNumber;//行号
+6.	}  
+```
+
+- 赋值语句(class _AssignStatement)
+![](imgs/赋值语句.png)
+```c++
+5.	class _AssignStatement:public _Statement{  
+6.	public:  
+7.	    _VariantReference* variantReference;  //左值变量
+8.	    _Expression* expression; //右值表达式
+9.	};
+```
+
+- if语句(class _IfStatement)
+![](imgs/if语句.png)
+当els指针为NULL时，对应上图左边的结构；当els指针指向了一个语句结构时，对应上图右边的结构。
+```c++
+10.	class _IfStatetement:public _Statement{  
+11.	public:  
+12.	    _Expression* condition;  //条件表达式
+13.	    _Statement* then; //满足条件时执行的语句
+14.	    _Statement* els; //不满足条件时执行的语句，如果为NULL则没有else部分
+15.	};  
+```
+
+- for语句(class _ForStatement)
+![](imgs/for语句.png)
+```c++
+1.	class _Forstate:public _Statement{  
+2.	public:  
+3.	    pair<string,int> id;  //循环变量
+4.	    _Expression* state;  //起始值
+5.	    _Expression* end;  //终值
+6.	    _Statement* _do; //循环体语句
+7.	};  
+```
+
+- while语句(class _WhileStatement)
+![](imgs/while语句.png)
+```c++
+1.	class _WhileStatement:public _Statement{    
+2.	public:    
+3.	    Expression* condition;   //条件表达式
+4.	    Statement* _do;   //循环体语句
+5.	};  
+```
+
+- repeat语句(class _Repeatstate)
+![](imgs/repeat语句.png)
+```c++
+1.	class _WhileStatement:public _Statement{    
+2.	public:    
+3.	    Expression* condition;   //条件表达式
+4.	    Statement* _do;   //循环体语句
+5.	};  
+```
+
+- 复合语句(class _Compound)
+![](imgs/复合语句.png)
+```c++
+1.	class _Compound:public _Statement{  
+2.	public:  
+3.	    vector<class _Statement*>statements; //语句列表
+4.	};  
+```
+
+- 过程调用语句(class _Procudure_call)
+![](imgs/过程调用语句.png)
+```c++
+16.	class _procedureCall:public _Statement{
+17.	    pair<string,int> procedureId; //过程标识符及行号
+18.	    vector<_Expression*> actualParaList; //实参
+19.	}
+```
+
+- 表达式(class _Expression)
+![](imgs/表达式.png)
+```c++
+1.	class _Expression{    
+2.	    string type;//表达式类型,"var"表示变量,"int"表示整数,"real"表示浮点数,"function"表示函数调用,"compound"表示复合表达式,compound有普通的二目运算符，还有minus、not、bracket等单目运算符  
+3.	      
+4.	    variantRef* variantReference;//变量   
+5.	       
+6.	    int intNum;//整数  
+7.	      
+8.	    float realNum;//浮点数  
+9.	       
+10.	    string strOfNum;//常数值的字符串表示
+11.	      
+12.	    char charVal; //常量字符
+13.	    _FunctionCall *functionCall;//函数调用  
+14.	      
+15.	    string operation;//复合表达式  
+16.	    string operationType;//操作符类型,"relop","mulop","addop","single"
+17.	    _Expression *operand1,*operand2;  
+18.	  
+19.	    int lineNumber;//行数  
+20.	}expression;   
+```
+
+#### 符号表
+- 主符号表结构
+![](imgs/主符号表结构.png)
+- 子符号表结构
+![](imgs/子符号表结构.png)
+- 伪代码
+```
+// 主符号表
+{
+	线性表(主符号表表项)
+}
+
+// 主符号表表项
+{
+	符号种类 //"normal variant"表示普通变量,"constant"表示常量,"array"表示数组
+//"procedure"表示过程,"function"表示函数标识符名称
+	标识符名称
+行号
+	类型 //如果是变量/常量，则表示变量/常量类型；
+//如果是数组，则表示数组元素的类型；
+//如果是函数，则表示函数返回值类型，类型本身只能为基本类型
+	常量取值
+	数组维数/参数个数 //如果是数组，则表示数组维数，如果是函数/过程，则表示参数个数
+	数组各维上下界
+	指向过程/函数子符号表的指针
+}
+
+// 子符号表
+{
+	线性表(子符号表表项)
+}
+
+// 子符号表表项
+{
+	符号种类 //"value parameter"表示传值参数,"var parameter"表示传引用参数
+//"normal variant"表示普通变量,"constant"表示常量,"array"表示数组
+	标识符名称
+行号
+	类型 //如果是变量/常量，则表示变量/常量类型；
+//如果是数组，则表示数组元素的类型； 
+	常量取值
+	数组维数 //表示数组维数
+	数组各维上下界
+}
+
+```
+
+### 模块之间的接口设计
+模块之间的接口主要是一些函数和全局变量。
+#### 词法分析和语法分析之间的接口
+- yylval	结构体变量，用于保存记号的属性，在词法分析程序和语法分析程序之间共享记号信息
+- int yylex();	调用词法分析器的接口，每调用一次，返回一个记号序列，其中记号本身为该函数的返回值，记号的属性保存在yylval结构体变量中；返回值为0表示词法分析程序停止运行
+
+#### 语法分析与语义分析之间的接口
+- class program *AST_Root	抽象语法树的根节点的指针
+
+#### 语义分析和代码生成之间的接口
+- class program *AST_Root	抽象语法树的根节点的指针
+- class Symbol_Table *S_Table	主符号表的指针
+
+#### 符号表操作接口
+- 添加传值参数
+    - 函数接口：`void addPara(string id, int lineNumber, string type);`
+    - 参数列表：
+        - string id	传值参数标识符
+        - int lineNumber	行号
+        - string type	传值参数类型
+    - 返回值：无
+- 添加引用参数
+    - 函数接口：`void addVarPara(string id, int lineNumber, string type);`
+    - 参数列表：
+        - string id	引用参数标识符
+        - int lineNumber	行号
+        - string type	引用参数类型
+    - 返回值：无
+- 添加普通变量
+    - 函数接口：`void addVar(string id, int lineNumber, string type);`
+    - 参数列表：
+        - string id	普通变量标识符
+        - int lineNumber	行号
+        - string type	普通变量类型
+    - 返回值：无
+- 添加常量
+    - 函数接口：`void addConst(string id, int lineNumber, string type, bool isMinusShow, string value);`
+    - 参数列表：
+        - string id	常量标识符
+        - int lineNumber	行号
+        - string type	常量
+        - bool isMinusShow	常量是否为负
+        - string value	以字符串表示的常量取值
+    - 返回值：无
+- 添加数组
+    - 函数接口：`void addArray(string id, int lineNumber, string type, int amount, vector< pair<int, int> > arrayRangeList);`
+    - 参数列表：
+        - string id	数组标识符
+        - int lineNumber	行号
+        - string type	数组元素类型
+        - int amount	数组维数
+        - vector< pair<int, int> > arrayRangeList	数组各维上下界列表
+    - 返回值：无
+- 添加过程
+    - 函数接口：`void addProcedure(string id, int lineNumber, int amount, _SymbolTable *subSymbolTable=NULL);`
+    - 参数列表：
+        - string id	过程标识符
+        - int lineNumber	行号
+        - int amount	过程参数个数
+        - _SymbolTable *subSymbolTable	指向子符号表的指针
+    - 返回值：无
+- 添加函数
+    - 函数接口：`void addFunction(string id, int lineNumber, string type, int amount, _SymbolTable *subSymbolTable=NULL);`
+    - 参数列表：
+        - string id	函数标识符
+        - int lineNumber	行号
+        - string type	函数返回值类型
+        - int amount	函数参数个数
+        - _SymbolTable *subSymbolTable	指向子符号表的指针
+    - 返回值：无
+- 添加子符号表指针
+    - 函数接口：`void addSubSymbolTable(string id, _SymbolTable *subSymbolTable);`
+    - 参数列表：
+        - string id	函数或过程标识符
+        - _SymbolTable *subSymbolTable	指向子符号表的指针
+    - 返回值：无
+- 以标识符查找记录
+    - 函数接口：`_SymbolRecord* findSymbolRecord(_SymbolTable* currentSymbolTable, string id, int mode=0);`
+    - 参数列表：
+        - _SymbolTable* currentSymbolTable	指向所需要查找的符号表的指针
+        - string id	标识符
+        - int mode	如果当前符号表没有找到，是否需要到上一级符号表查找，mode=0表示需要，mode!=0表示不需要
+    - 返回值：_SymbolRecord*，指向所找到的记录类型的指针，如果没有找到，则为NULL
+
+## 详细设计
+见docx
+
+## 测试
+见docx
