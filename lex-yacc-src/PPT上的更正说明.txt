@@ -1,0 +1,55 @@
+﻿PPT上的语法图和文法产生式需要修改的地方
+
+首先是语言语法图的问题（有些不算是问题吧，但是对应到语法分析，不可能知道这些信息，所以需要修改）：
+P8   标识符这个语法图属于词法分析
+P10  常量中字符常量的识别由词法分析完成，这里直接写为“字符常量”
+     上面的“常量标识符”改为“标识符”
+     上面的“无符号数”改为“无符号整数”和“无符号浮点数”
+P11  常数和常整数属于词法分析。这里也需要改一下，词法分析的输出分为无符号整数（不带小数点部分的）和无符号浮点数（带小数点部分的）
+     这个更改会影响后面的，这个后面再说
+
+P13  “函数标识符”、“过程标识符”、“变量标识符”改为“标识符”
+
+P14  “变量标识符”改为“标识符”
+P15  “函数标识符”改为“标识符”
+
+下面是文法产生式需要修改的地方：
+P17 前面提到，词法分析器对于常数的输出分为无符号常整数和无符号常浮点数
+    且词法分析器也可以识别字符常量，即'字符'。
+    所以const_value的产生式改为
+    const_value -> +id | -id | id
+                  |+UINUM |-UINUM |UINUM
+                  |+UFNUM |-UFNUM |UFNUM
+                  |CHAR
+    其中UINUM表示无符号常整数，UFNUM表示无符号常浮点数，CHAR表示字符常量
+
+P18 simple_type直接改为终结符TYPE，integer、real、boolean、char作为这个终结符的不同属性
+    所以type产生式改为
+    type->TYPE
+         |array [ period ] of TYPE
+
+    digits即UINUM，所以period的产生式改为
+    period->period , UINUM .. UINUM
+           |UINUM .. UINUM
+    
+P20 为解决if-then-else的移进规约冲突需要在规则声明部分声明优先级
+    %nonassoc LOWER_THAN_ELSE
+    %nonassco ELSE
+（nonassco表示没有结合性，yacc规定写在下面的优先级较高）
+    并用诸如%prec LOWER_THAN_ELSE的形式加到对应的产生式后面
+    这样就可以解决移进规约冲突
+    
+
+P21 state产生式增加 while和repeat until
+    state->while expression do statement
+          |repeat statement until expression
+
+另外需要说明
+常量定义中，赋值用的是=，所以=需要从relop中单独拿出来，涉及到relop的产生式，需要用=再写一个产生式出来
+另外，减号还可能充当取相反数的单目运算符，所以-也要从addop中单独拿出来，涉及到addop的产生式，需要用-再写一个产生式出来
+
+根据文法，整个程序中，如果有常量定义和变量定义，一定是常量定义在最前，变量定义随后，然后才是子过程、子函数、主程序体。
+常量定义只能出现一个const，变量定义只能出现一个var
+子过程和子函数的声明不分先后，也可以穿插着来
+主程序体一定在最后
+

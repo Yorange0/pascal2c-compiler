@@ -1,0 +1,3348 @@
+Terminals unused in grammar
+
+   '*'
+   '/'
+   UMINUS
+   ONE
+   TWO
+   THREE
+
+
+State 148 conflicts: 3 reduce/reduce
+State 238 conflicts: 1 shift/reduce
+State 252 conflicts: 1 shift/reduce
+
+
+Grammar
+
+    0 $accept: programstruct $end
+
+    1 programstruct: program_head ';' program_body '.'
+    2              | program_head error program_body '.'
+    3              | program_head ';' program_body error
+    4              | error ';' program_body '.'
+    5              | program_head ';' error '.'
+    6              | error program_head ';' program_body '.'
+    7              | error program_head error program_body '.'
+    8              | error program_head ';' program_body error
+    9              | error program_head ';' error '.'
+
+   10 program_head: PROGRAM IDENTIFIER '(' idlist ')'
+   11             | PROGRAM error '(' idlist ')'
+   12             | PROGRAM IDENTIFIER error idlist ')'
+   13             | PROGRAM IDENTIFIER '(' error ')'
+   14             | PROGRAM IDENTIFIER '(' idlist error
+   15             | PROGRAM error
+   16             | PROGRAM IDENTIFIER error
+   17             | PROGRAM IDENTIFIER '(' error
+
+   18 program_body: const_declarations var_declarations subprogram_declarations compound_statement
+
+   19 idlist: idlist ',' IDENTIFIER
+   20       | IDENTIFIER
+
+   21 const_declarations: CONST const_declaration ';'
+   22                   | /* empty */
+   23                   | CONST error ';'
+   24                   | CONST const_declaration error
+
+   25 const_declaration: const_declaration ';' IDENTIFIER '=' const_value
+   26                  | const_declaration ';' IDENTIFIER '=' error
+   27                  | IDENTIFIER '=' const_value
+   28                  | IDENTIFIER '=' error
+   29                  | const_declaration error IDENTIFIER '=' const_value
+   30                  | const_declaration ';' IDENTIFIER error const_value
+   31                  | IDENTIFIER error const_value
+
+   32 const_value: '+' IDENTIFIER
+   33            | '-' IDENTIFIER
+   34            | IDENTIFIER
+   35            | '+' UINUM
+   36            | '-' UINUM
+   37            | UINUM
+   38            | '+' UFNUM
+   39            | '-' UFNUM
+   40            | UFNUM
+   41            | CHAR
+
+   42 var_declarations: VAR var_declaration ';'
+   43                 | /* empty */
+   44                 | VAR error ';'
+   45                 | VAR var_declaration error
+
+   46 var_declaration: var_declaration ';' idlist ':' type
+   47                | idlist ':' type
+   48                | var_declaration error idlist ':' type
+   49                | var_declaration ';' idlist error type
+   50                | var_declaration ';' idlist ':' error
+   51                | idlist ':' error
+   52                | idlist error type
+
+   53 type: TYPE
+   54     | ARRAY '[' period ']' OF TYPE
+   55     | ARRAY error period ']' OF TYPE
+   56     | ARRAY '[' period ']' error TYPE
+   57     | ARRAY '[' period ']' OF error
+   58     | ARRAY error
+   59     | ARRAY '[' error
+   60     | ARRAY '[' period error
+
+   61 period: period ',' UINUM RANGEDOT UINUM
+   62       | period error UINUM RANGEDOT UINUM
+   63       | period ',' UINUM error UINUM
+   64       | UINUM RANGEDOT UINUM
+
+   65 subprogram_declarations: subprogram_declarations subprogram ';'
+   66                        | subprogram_declarations subprogram error
+   67                        | /* empty */
+
+   68 subprogram: subprogram_head ';' subprogram_body
+   69           | subprogram_head error subprogram_body
+
+   70 subprogram_head: PROCEDURE IDENTIFIER formal_parameter
+   71                | FUNCTION IDENTIFIER formal_parameter ':' TYPE
+   72                | FUNCTION error formal_parameter ':' TYPE
+   73                | FUNCTION IDENTIFIER formal_parameter error TYPE
+   74                | FUNCTION IDENTIFIER formal_parameter ':' error
+   75                | FUNCTION IDENTIFIER formal_parameter error
+   76                | FUNCTION error
+   77                | PROCEDURE error
+
+   78 formal_parameter: '(' parameter_list ')'
+   79                 | /* empty */
+   80                 | '(' error
+   81                 | '(' parameter_list error
+
+   82 parameter_list: parameter_list ';' parameter
+   83               | parameter_list error parameter
+   84               | parameter
+
+   85 parameter: var_parameter
+   86          | value_parameter
+
+   87 var_parameter: VAR value_parameter
+   88              | VAR error
+
+   89 value_parameter: idlist ':' TYPE
+   90                | idlist error TYPE
+   91                | idlist ':' error
+   92                | idlist error
+
+   93 subprogram_body: const_declarations var_declarations compound_statement
+
+   94 compound_statement: _BEGIN statement_list END
+   95                   | _BEGIN statement_list error
+
+   96 statement_list: statement_list ';' statement
+   97               | statement_list error statement
+   98               | statement
+
+   99 statement: variable ASSIGNOP expression
+  100          | procedure_call
+  101          | compound_statement
+  102          | IF expression THEN statement else_part
+  103          | IF expression error statement else_part
+  104          | FOR IDENTIFIER ASSIGNOP expression TO expression DO statement
+  105          | FOR IDENTIFIER error expression TO expression DO statement
+  106          | FOR IDENTIFIER ASSIGNOP expression error expression DO statement
+  107          | FOR IDENTIFIER ASSIGNOP expression TO expression error statement
+  108          | WHILE expression DO statement
+  109          | WHILE expression error statement
+  110          | REPEAT statement UNTIL expression
+  111          | REPEAT statement error expression
+  112          | /* empty */
+
+  113 else_part: ELSE statement
+  114          | /* empty */
+
+  115 variable: IDENTIFIER id_varpart
+
+  116 id_varpart: '[' expression_list ']'
+  117           | '[' error
+  118           | '[' expression_list error
+  119           | /* empty */
+
+  120 procedure_call: IDENTIFIER
+  121               | IDENTIFIER '(' expression_list ')'
+  122               | IDENTIFIER '(' expression_list error
+
+  123 expression_list: expression_list ',' expression
+  124                | expression
+  125                | expression_list error expression
+
+  126 expression: simple_expression RELOP simple_expression
+  127           | simple_expression '=' simple_expression
+  128           | simple_expression
+
+  129 simple_expression: simple_expression ADDOP term
+  130                  | simple_expression ADDOP error term
+  131                  | simple_expression '-' term
+  132                  | simple_expression '-' error term
+  133                  | term
+
+  134 term: term MULOP factor
+  135     | term MULOP error factor
+  136     | factor
+
+  137 factor: UINUM
+  138       | UFNUM
+  139       | variable
+  140       | IDENTIFIER '(' expression_list ')'
+  141       | IDENTIFIER '(' expression_list error
+  142       | IDENTIFIER '(' error
+  143       | '(' expression ')'
+  144       | '(' expression error
+  145       | NOT factor
+  146       | '-' factor
+  147       | CHAR
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+'(' (40) 10 11 13 14 17 78 80 81 121 122 140 141 142 143 144
+')' (41) 10 11 12 13 78 121 140 143
+'*' (42)
+'+' (43) 32 35 38
+',' (44) 19 61 63 123
+'-' (45) 33 36 39 131 132 146
+'.' (46) 1 2 4 5 6 7 9
+'/' (47)
+':' (58) 46 47 48 50 51 71 72 74 89 91
+';' (59) 1 3 4 5 6 8 9 21 23 25 26 30 42 44 46 49 50 65 68 82 96
+'=' (61) 25 26 27 28 29 127
+'[' (91) 54 56 57 59 60 116 117 118
+']' (93) 54 55 56 57 116
+error (256) 2 3 4 5 6 7 8 9 11 12 13 14 15 16 17 23 24 26 28 29 30
+    31 44 45 48 49 50 51 52 55 56 57 58 59 60 62 63 66 69 72 73 74
+    75 76 77 80 81 83 88 90 91 92 95 97 103 105 106 107 109 111 117
+    118 122 125 130 132 135 141 142 144
+PROGRAM (258) 10 11 12 13 14 15 16 17
+CONST (259) 21 23 24
+VAR (260) 42 44 45 87 88
+ARRAY (261) 54 55 56 57 58 59 60
+OF (262) 54 55 57
+PROCEDURE (263) 70 77
+FUNCTION (264) 71 72 73 74 75 76
+_BEGIN (265) 94 95
+END (266) 94
+IF (267) 102 103
+THEN (268) 102
+FOR (269) 104 105 106 107
+TO (270) 104 105 107
+DO (271) 104 105 106 108
+ELSE (272) 113
+REPEAT (273) 110 111
+UNTIL (274) 110
+WHILE (275) 108 109
+IDENTIFIER (276) 10 12 13 14 16 17 19 20 25 26 27 28 29 30 31 32 33
+    34 70 71 73 74 75 104 105 106 107 115 120 121 122 140 141 142
+UINUM (277) 35 36 37 61 62 63 64 137
+UFNUM (278) 38 39 40 138
+CHAR (279) 41 147
+TYPE (280) 53 54 55 56 71 72 73 89 90
+ASSIGNOP (281) 99 104 106 107
+RELOP (282) 126
+ADDOP (283) 129 130
+MULOP (284) 134 135
+NOT (285) 145
+RANGEDOT (286) 61 62 64
+ADD (287)
+MUL (288)
+UMINUS (289)
+LOWER_THAN_ELSE (290)
+ONE (291)
+TWO (292)
+THREE (293)
+
+
+Nonterminals, with rules where they appear
+
+$accept (52)
+    on left: 0
+programstruct (53)
+    on left: 1 2 3 4 5 6 7 8 9, on right: 0
+program_head (54)
+    on left: 10 11 12 13 14 15 16 17, on right: 1 2 3 5 6 7 8 9
+program_body (55)
+    on left: 18, on right: 1 2 3 4 6 7 8
+idlist (56)
+    on left: 19 20, on right: 10 11 12 14 19 46 47 48 49 50 51 52 89
+    90 91 92
+const_declarations (57)
+    on left: 21 22 23 24, on right: 18 93
+const_declaration (58)
+    on left: 25 26 27 28 29 30 31, on right: 21 24 25 26 29 30
+const_value (59)
+    on left: 32 33 34 35 36 37 38 39 40 41, on right: 25 27 29 30 31
+var_declarations (60)
+    on left: 42 43 44 45, on right: 18 93
+var_declaration (61)
+    on left: 46 47 48 49 50 51 52, on right: 42 45 46 48 49 50
+type (62)
+    on left: 53 54 55 56 57 58 59 60, on right: 46 47 48 49 52
+period (63)
+    on left: 61 62 63 64, on right: 54 55 56 57 60 61 62 63
+subprogram_declarations (64)
+    on left: 65 66 67, on right: 18 65 66
+subprogram (65)
+    on left: 68 69, on right: 65 66
+subprogram_head (66)
+    on left: 70 71 72 73 74 75 76 77, on right: 68 69
+formal_parameter (67)
+    on left: 78 79 80 81, on right: 70 71 72 73 74 75
+parameter_list (68)
+    on left: 82 83 84, on right: 78 81 82 83
+parameter (69)
+    on left: 85 86, on right: 82 83 84
+var_parameter (70)
+    on left: 87 88, on right: 85
+value_parameter (71)
+    on left: 89 90 91 92, on right: 86 87
+subprogram_body (72)
+    on left: 93, on right: 68 69
+compound_statement (73)
+    on left: 94 95, on right: 18 93 101
+statement_list (74)
+    on left: 96 97 98, on right: 94 95 96 97
+statement (75)
+    on left: 99 100 101 102 103 104 105 106 107 108 109 110 111 112,
+    on right: 96 97 98 102 103 104 105 106 107 108 109 110 111 113
+else_part (76)
+    on left: 113 114, on right: 102 103
+variable (77)
+    on left: 115, on right: 99 139
+id_varpart (78)
+    on left: 116 117 118 119, on right: 115
+procedure_call (79)
+    on left: 120 121 122, on right: 100
+expression_list (80)
+    on left: 123 124 125, on right: 116 118 121 122 123 125 140 141
+expression (81)
+    on left: 126 127 128, on right: 99 102 103 104 105 106 107 108
+    109 110 111 123 124 125 143 144
+simple_expression (82)
+    on left: 129 130 131 132 133, on right: 126 127 128 129 130 131
+    132
+term (83)
+    on left: 134 135 136, on right: 129 130 131 132 133 134 135
+factor (84)
+    on left: 137 138 139 140 141 142 143 144 145 146 147, on right:
+    134 135 136 145 146
+
+
+state 0
+
+    0 $accept: . programstruct $end
+
+    error    shift, and go to state 1
+    PROGRAM  shift, and go to state 2
+
+    programstruct  go to state 3
+    program_head   go to state 4
+
+
+state 1
+
+    4 programstruct: error . ';' program_body '.'
+    6              | error . program_head ';' program_body '.'
+    7              | error . program_head error program_body '.'
+    8              | error . program_head ';' program_body error
+    9              | error . program_head ';' error '.'
+
+    PROGRAM  shift, and go to state 2
+    ';'      shift, and go to state 5
+
+    program_head  go to state 6
+
+
+state 2
+
+   10 program_head: PROGRAM . IDENTIFIER '(' idlist ')'
+   11             | PROGRAM . error '(' idlist ')'
+   12             | PROGRAM . IDENTIFIER error idlist ')'
+   13             | PROGRAM . IDENTIFIER '(' error ')'
+   14             | PROGRAM . IDENTIFIER '(' idlist error
+   15             | PROGRAM . error
+   16             | PROGRAM . IDENTIFIER error
+   17             | PROGRAM . IDENTIFIER '(' error
+
+    error       shift, and go to state 7
+    IDENTIFIER  shift, and go to state 8
+
+
+state 3
+
+    0 $accept: programstruct . $end
+
+    $end  shift, and go to state 9
+
+
+state 4
+
+    1 programstruct: program_head . ';' program_body '.'
+    2              | program_head . error program_body '.'
+    3              | program_head . ';' program_body error
+    5              | program_head . ';' error '.'
+
+    error  shift, and go to state 10
+    ';'    shift, and go to state 11
+
+
+state 5
+
+    4 programstruct: error ';' . program_body '.'
+
+    CONST  shift, and go to state 12
+
+    $default  reduce using rule 22 (const_declarations)
+
+    program_body        go to state 13
+    const_declarations  go to state 14
+
+
+state 6
+
+    6 programstruct: error program_head . ';' program_body '.'
+    7              | error program_head . error program_body '.'
+    8              | error program_head . ';' program_body error
+    9              | error program_head . ';' error '.'
+
+    error  shift, and go to state 15
+    ';'    shift, and go to state 16
+
+
+state 7
+
+   11 program_head: PROGRAM error . '(' idlist ')'
+   15             | PROGRAM error .
+
+    '('  shift, and go to state 17
+
+    $default  reduce using rule 15 (program_head)
+
+
+state 8
+
+   10 program_head: PROGRAM IDENTIFIER . '(' idlist ')'
+   12             | PROGRAM IDENTIFIER . error idlist ')'
+   13             | PROGRAM IDENTIFIER . '(' error ')'
+   14             | PROGRAM IDENTIFIER . '(' idlist error
+   16             | PROGRAM IDENTIFIER . error
+   17             | PROGRAM IDENTIFIER . '(' error
+
+    error  shift, and go to state 18
+    '('    shift, and go to state 19
+
+
+state 9
+
+    0 $accept: programstruct $end .
+
+    $default  accept
+
+
+state 10
+
+    2 programstruct: program_head error . program_body '.'
+
+    CONST  shift, and go to state 12
+
+    $default  reduce using rule 22 (const_declarations)
+
+    program_body        go to state 20
+    const_declarations  go to state 14
+
+
+state 11
+
+    1 programstruct: program_head ';' . program_body '.'
+    3              | program_head ';' . program_body error
+    5              | program_head ';' . error '.'
+
+    error  shift, and go to state 21
+    CONST  shift, and go to state 12
+
+    VAR        reduce using rule 22 (const_declarations)
+    PROCEDURE  reduce using rule 22 (const_declarations)
+    FUNCTION   reduce using rule 22 (const_declarations)
+    _BEGIN     reduce using rule 22 (const_declarations)
+
+    program_body        go to state 22
+    const_declarations  go to state 14
+
+
+state 12
+
+   21 const_declarations: CONST . const_declaration ';'
+   23                   | CONST . error ';'
+   24                   | CONST . const_declaration error
+
+    error       shift, and go to state 23
+    IDENTIFIER  shift, and go to state 24
+
+    const_declaration  go to state 25
+
+
+state 13
+
+    4 programstruct: error ';' program_body . '.'
+
+    '.'  shift, and go to state 26
+
+
+state 14
+
+   18 program_body: const_declarations . var_declarations subprogram_declarations compound_statement
+
+    VAR  shift, and go to state 27
+
+    $default  reduce using rule 43 (var_declarations)
+
+    var_declarations  go to state 28
+
+
+state 15
+
+    7 programstruct: error program_head error . program_body '.'
+
+    CONST  shift, and go to state 12
+
+    $default  reduce using rule 22 (const_declarations)
+
+    program_body        go to state 29
+    const_declarations  go to state 14
+
+
+state 16
+
+    6 programstruct: error program_head ';' . program_body '.'
+    8              | error program_head ';' . program_body error
+    9              | error program_head ';' . error '.'
+
+    error  shift, and go to state 30
+    CONST  shift, and go to state 12
+
+    VAR        reduce using rule 22 (const_declarations)
+    PROCEDURE  reduce using rule 22 (const_declarations)
+    FUNCTION   reduce using rule 22 (const_declarations)
+    _BEGIN     reduce using rule 22 (const_declarations)
+
+    program_body        go to state 31
+    const_declarations  go to state 14
+
+
+state 17
+
+   11 program_head: PROGRAM error '(' . idlist ')'
+
+    IDENTIFIER  shift, and go to state 32
+
+    idlist  go to state 33
+
+
+state 18
+
+   12 program_head: PROGRAM IDENTIFIER error . idlist ')'
+   16             | PROGRAM IDENTIFIER error .
+
+    IDENTIFIER  shift, and go to state 32
+
+    $default  reduce using rule 16 (program_head)
+
+    idlist  go to state 34
+
+
+state 19
+
+   10 program_head: PROGRAM IDENTIFIER '(' . idlist ')'
+   13             | PROGRAM IDENTIFIER '(' . error ')'
+   14             | PROGRAM IDENTIFIER '(' . idlist error
+   17             | PROGRAM IDENTIFIER '(' . error
+
+    error       shift, and go to state 35
+    IDENTIFIER  shift, and go to state 32
+
+    idlist  go to state 36
+
+
+state 20
+
+    2 programstruct: program_head error program_body . '.'
+
+    '.'  shift, and go to state 37
+
+
+state 21
+
+    5 programstruct: program_head ';' error . '.'
+
+    '.'  shift, and go to state 38
+
+
+state 22
+
+    1 programstruct: program_head ';' program_body . '.'
+    3              | program_head ';' program_body . error
+
+    error  shift, and go to state 39
+    '.'    shift, and go to state 40
+
+
+state 23
+
+   23 const_declarations: CONST error . ';'
+
+    ';'  shift, and go to state 41
+
+
+state 24
+
+   27 const_declaration: IDENTIFIER . '=' const_value
+   28                  | IDENTIFIER . '=' error
+   31                  | IDENTIFIER . error const_value
+
+    error  shift, and go to state 42
+    '='    shift, and go to state 43
+
+
+state 25
+
+   21 const_declarations: CONST const_declaration . ';'
+   24                   | CONST const_declaration . error
+   25 const_declaration: const_declaration . ';' IDENTIFIER '=' const_value
+   26                  | const_declaration . ';' IDENTIFIER '=' error
+   29                  | const_declaration . error IDENTIFIER '=' const_value
+   30                  | const_declaration . ';' IDENTIFIER error const_value
+
+    error  shift, and go to state 44
+    ';'    shift, and go to state 45
+
+
+state 26
+
+    4 programstruct: error ';' program_body '.' .
+
+    $default  reduce using rule 4 (programstruct)
+
+
+state 27
+
+   42 var_declarations: VAR . var_declaration ';'
+   44                 | VAR . error ';'
+   45                 | VAR . var_declaration error
+
+    error       shift, and go to state 46
+    IDENTIFIER  shift, and go to state 32
+
+    idlist           go to state 47
+    var_declaration  go to state 48
+
+
+state 28
+
+   18 program_body: const_declarations var_declarations . subprogram_declarations compound_statement
+
+    $default  reduce using rule 67 (subprogram_declarations)
+
+    subprogram_declarations  go to state 49
+
+
+state 29
+
+    7 programstruct: error program_head error program_body . '.'
+
+    '.'  shift, and go to state 50
+
+
+state 30
+
+    9 programstruct: error program_head ';' error . '.'
+
+    '.'  shift, and go to state 51
+
+
+state 31
+
+    6 programstruct: error program_head ';' program_body . '.'
+    8              | error program_head ';' program_body . error
+
+    error  shift, and go to state 52
+    '.'    shift, and go to state 53
+
+
+state 32
+
+   20 idlist: IDENTIFIER .
+
+    $default  reduce using rule 20 (idlist)
+
+
+state 33
+
+   11 program_head: PROGRAM error '(' idlist . ')'
+   19 idlist: idlist . ',' IDENTIFIER
+
+    ')'  shift, and go to state 54
+    ','  shift, and go to state 55
+
+
+state 34
+
+   12 program_head: PROGRAM IDENTIFIER error idlist . ')'
+   19 idlist: idlist . ',' IDENTIFIER
+
+    ')'  shift, and go to state 56
+    ','  shift, and go to state 55
+
+
+state 35
+
+   13 program_head: PROGRAM IDENTIFIER '(' error . ')'
+   17             | PROGRAM IDENTIFIER '(' error .
+
+    ')'  shift, and go to state 57
+
+    $default  reduce using rule 17 (program_head)
+
+
+state 36
+
+   10 program_head: PROGRAM IDENTIFIER '(' idlist . ')'
+   14             | PROGRAM IDENTIFIER '(' idlist . error
+   19 idlist: idlist . ',' IDENTIFIER
+
+    error  shift, and go to state 58
+    ')'    shift, and go to state 59
+    ','    shift, and go to state 55
+
+
+state 37
+
+    2 programstruct: program_head error program_body '.' .
+
+    $default  reduce using rule 2 (programstruct)
+
+
+state 38
+
+    5 programstruct: program_head ';' error '.' .
+
+    $default  reduce using rule 5 (programstruct)
+
+
+state 39
+
+    3 programstruct: program_head ';' program_body error .
+
+    $default  reduce using rule 3 (programstruct)
+
+
+state 40
+
+    1 programstruct: program_head ';' program_body '.' .
+
+    $default  reduce using rule 1 (programstruct)
+
+
+state 41
+
+   23 const_declarations: CONST error ';' .
+
+    $default  reduce using rule 23 (const_declarations)
+
+
+state 42
+
+   31 const_declaration: IDENTIFIER error . const_value
+
+    IDENTIFIER  shift, and go to state 60
+    UINUM       shift, and go to state 61
+    UFNUM       shift, and go to state 62
+    CHAR        shift, and go to state 63
+    '+'         shift, and go to state 64
+    '-'         shift, and go to state 65
+
+    const_value  go to state 66
+
+
+state 43
+
+   27 const_declaration: IDENTIFIER '=' . const_value
+   28                  | IDENTIFIER '=' . error
+
+    error       shift, and go to state 67
+    IDENTIFIER  shift, and go to state 60
+    UINUM       shift, and go to state 61
+    UFNUM       shift, and go to state 62
+    CHAR        shift, and go to state 63
+    '+'         shift, and go to state 64
+    '-'         shift, and go to state 65
+
+    const_value  go to state 68
+
+
+state 44
+
+   24 const_declarations: CONST const_declaration error .
+   29 const_declaration: const_declaration error . IDENTIFIER '=' const_value
+
+    IDENTIFIER  shift, and go to state 69
+
+    $default  reduce using rule 24 (const_declarations)
+
+
+state 45
+
+   21 const_declarations: CONST const_declaration ';' .
+   25 const_declaration: const_declaration ';' . IDENTIFIER '=' const_value
+   26                  | const_declaration ';' . IDENTIFIER '=' error
+   30                  | const_declaration ';' . IDENTIFIER error const_value
+
+    IDENTIFIER  shift, and go to state 70
+
+    $default  reduce using rule 21 (const_declarations)
+
+
+state 46
+
+   44 var_declarations: VAR error . ';'
+
+    ';'  shift, and go to state 71
+
+
+state 47
+
+   19 idlist: idlist . ',' IDENTIFIER
+   47 var_declaration: idlist . ':' type
+   51                | idlist . ':' error
+   52                | idlist . error type
+
+    error  shift, and go to state 72
+    ','    shift, and go to state 55
+    ':'    shift, and go to state 73
+
+
+state 48
+
+   42 var_declarations: VAR var_declaration . ';'
+   45                 | VAR var_declaration . error
+   46 var_declaration: var_declaration . ';' idlist ':' type
+   48                | var_declaration . error idlist ':' type
+   49                | var_declaration . ';' idlist error type
+   50                | var_declaration . ';' idlist ':' error
+
+    error  shift, and go to state 74
+    ';'    shift, and go to state 75
+
+
+state 49
+
+   18 program_body: const_declarations var_declarations subprogram_declarations . compound_statement
+   65 subprogram_declarations: subprogram_declarations . subprogram ';'
+   66                        | subprogram_declarations . subprogram error
+
+    PROCEDURE  shift, and go to state 76
+    FUNCTION   shift, and go to state 77
+    _BEGIN     shift, and go to state 78
+
+    subprogram          go to state 79
+    subprogram_head     go to state 80
+    compound_statement  go to state 81
+
+
+state 50
+
+    7 programstruct: error program_head error program_body '.' .
+
+    $default  reduce using rule 7 (programstruct)
+
+
+state 51
+
+    9 programstruct: error program_head ';' error '.' .
+
+    $default  reduce using rule 9 (programstruct)
+
+
+state 52
+
+    8 programstruct: error program_head ';' program_body error .
+
+    $default  reduce using rule 8 (programstruct)
+
+
+state 53
+
+    6 programstruct: error program_head ';' program_body '.' .
+
+    $default  reduce using rule 6 (programstruct)
+
+
+state 54
+
+   11 program_head: PROGRAM error '(' idlist ')' .
+
+    $default  reduce using rule 11 (program_head)
+
+
+state 55
+
+   19 idlist: idlist ',' . IDENTIFIER
+
+    IDENTIFIER  shift, and go to state 82
+
+
+state 56
+
+   12 program_head: PROGRAM IDENTIFIER error idlist ')' .
+
+    $default  reduce using rule 12 (program_head)
+
+
+state 57
+
+   13 program_head: PROGRAM IDENTIFIER '(' error ')' .
+
+    $default  reduce using rule 13 (program_head)
+
+
+state 58
+
+   14 program_head: PROGRAM IDENTIFIER '(' idlist error .
+
+    $default  reduce using rule 14 (program_head)
+
+
+state 59
+
+   10 program_head: PROGRAM IDENTIFIER '(' idlist ')' .
+
+    $default  reduce using rule 10 (program_head)
+
+
+state 60
+
+   34 const_value: IDENTIFIER .
+
+    $default  reduce using rule 34 (const_value)
+
+
+state 61
+
+   37 const_value: UINUM .
+
+    $default  reduce using rule 37 (const_value)
+
+
+state 62
+
+   40 const_value: UFNUM .
+
+    $default  reduce using rule 40 (const_value)
+
+
+state 63
+
+   41 const_value: CHAR .
+
+    $default  reduce using rule 41 (const_value)
+
+
+state 64
+
+   32 const_value: '+' . IDENTIFIER
+   35            | '+' . UINUM
+   38            | '+' . UFNUM
+
+    IDENTIFIER  shift, and go to state 83
+    UINUM       shift, and go to state 84
+    UFNUM       shift, and go to state 85
+
+
+state 65
+
+   33 const_value: '-' . IDENTIFIER
+   36            | '-' . UINUM
+   39            | '-' . UFNUM
+
+    IDENTIFIER  shift, and go to state 86
+    UINUM       shift, and go to state 87
+    UFNUM       shift, and go to state 88
+
+
+state 66
+
+   31 const_declaration: IDENTIFIER error const_value .
+
+    $default  reduce using rule 31 (const_declaration)
+
+
+state 67
+
+   28 const_declaration: IDENTIFIER '=' error .
+
+    $default  reduce using rule 28 (const_declaration)
+
+
+state 68
+
+   27 const_declaration: IDENTIFIER '=' const_value .
+
+    $default  reduce using rule 27 (const_declaration)
+
+
+state 69
+
+   29 const_declaration: const_declaration error IDENTIFIER . '=' const_value
+
+    '='  shift, and go to state 89
+
+
+state 70
+
+   25 const_declaration: const_declaration ';' IDENTIFIER . '=' const_value
+   26                  | const_declaration ';' IDENTIFIER . '=' error
+   30                  | const_declaration ';' IDENTIFIER . error const_value
+
+    error  shift, and go to state 90
+    '='    shift, and go to state 91
+
+
+state 71
+
+   44 var_declarations: VAR error ';' .
+
+    $default  reduce using rule 44 (var_declarations)
+
+
+state 72
+
+   52 var_declaration: idlist error . type
+
+    ARRAY  shift, and go to state 92
+    TYPE   shift, and go to state 93
+
+    type  go to state 94
+
+
+state 73
+
+   47 var_declaration: idlist ':' . type
+   51                | idlist ':' . error
+
+    error  shift, and go to state 95
+    ARRAY  shift, and go to state 92
+    TYPE   shift, and go to state 93
+
+    type  go to state 96
+
+
+state 74
+
+   45 var_declarations: VAR var_declaration error .
+   48 var_declaration: var_declaration error . idlist ':' type
+
+    IDENTIFIER  shift, and go to state 32
+
+    $default  reduce using rule 45 (var_declarations)
+
+    idlist  go to state 97
+
+
+state 75
+
+   42 var_declarations: VAR var_declaration ';' .
+   46 var_declaration: var_declaration ';' . idlist ':' type
+   49                | var_declaration ';' . idlist error type
+   50                | var_declaration ';' . idlist ':' error
+
+    IDENTIFIER  shift, and go to state 32
+
+    $default  reduce using rule 42 (var_declarations)
+
+    idlist  go to state 98
+
+
+state 76
+
+   70 subprogram_head: PROCEDURE . IDENTIFIER formal_parameter
+   77                | PROCEDURE . error
+
+    error       shift, and go to state 99
+    IDENTIFIER  shift, and go to state 100
+
+
+state 77
+
+   71 subprogram_head: FUNCTION . IDENTIFIER formal_parameter ':' TYPE
+   72                | FUNCTION . error formal_parameter ':' TYPE
+   73                | FUNCTION . IDENTIFIER formal_parameter error TYPE
+   74                | FUNCTION . IDENTIFIER formal_parameter ':' error
+   75                | FUNCTION . IDENTIFIER formal_parameter error
+   76                | FUNCTION . error
+
+    error       shift, and go to state 101
+    IDENTIFIER  shift, and go to state 102
+
+
+state 78
+
+   94 compound_statement: _BEGIN . statement_list END
+   95                   | _BEGIN . statement_list error
+
+    _BEGIN      shift, and go to state 78
+    IF          shift, and go to state 103
+    FOR         shift, and go to state 104
+    REPEAT      shift, and go to state 105
+    WHILE       shift, and go to state 106
+    IDENTIFIER  shift, and go to state 107
+
+    $default  reduce using rule 112 (statement)
+
+    compound_statement  go to state 108
+    statement_list      go to state 109
+    statement           go to state 110
+    variable            go to state 111
+    procedure_call      go to state 112
+
+
+state 79
+
+   65 subprogram_declarations: subprogram_declarations subprogram . ';'
+   66                        | subprogram_declarations subprogram . error
+
+    error  shift, and go to state 113
+    ';'    shift, and go to state 114
+
+
+state 80
+
+   68 subprogram: subprogram_head . ';' subprogram_body
+   69           | subprogram_head . error subprogram_body
+
+    error  shift, and go to state 115
+    ';'    shift, and go to state 116
+
+
+state 81
+
+   18 program_body: const_declarations var_declarations subprogram_declarations compound_statement .
+
+    $default  reduce using rule 18 (program_body)
+
+
+state 82
+
+   19 idlist: idlist ',' IDENTIFIER .
+
+    $default  reduce using rule 19 (idlist)
+
+
+state 83
+
+   32 const_value: '+' IDENTIFIER .
+
+    $default  reduce using rule 32 (const_value)
+
+
+state 84
+
+   35 const_value: '+' UINUM .
+
+    $default  reduce using rule 35 (const_value)
+
+
+state 85
+
+   38 const_value: '+' UFNUM .
+
+    $default  reduce using rule 38 (const_value)
+
+
+state 86
+
+   33 const_value: '-' IDENTIFIER .
+
+    $default  reduce using rule 33 (const_value)
+
+
+state 87
+
+   36 const_value: '-' UINUM .
+
+    $default  reduce using rule 36 (const_value)
+
+
+state 88
+
+   39 const_value: '-' UFNUM .
+
+    $default  reduce using rule 39 (const_value)
+
+
+state 89
+
+   29 const_declaration: const_declaration error IDENTIFIER '=' . const_value
+
+    IDENTIFIER  shift, and go to state 60
+    UINUM       shift, and go to state 61
+    UFNUM       shift, and go to state 62
+    CHAR        shift, and go to state 63
+    '+'         shift, and go to state 64
+    '-'         shift, and go to state 65
+
+    const_value  go to state 117
+
+
+state 90
+
+   30 const_declaration: const_declaration ';' IDENTIFIER error . const_value
+
+    IDENTIFIER  shift, and go to state 60
+    UINUM       shift, and go to state 61
+    UFNUM       shift, and go to state 62
+    CHAR        shift, and go to state 63
+    '+'         shift, and go to state 64
+    '-'         shift, and go to state 65
+
+    const_value  go to state 118
+
+
+state 91
+
+   25 const_declaration: const_declaration ';' IDENTIFIER '=' . const_value
+   26                  | const_declaration ';' IDENTIFIER '=' . error
+
+    error       shift, and go to state 119
+    IDENTIFIER  shift, and go to state 60
+    UINUM       shift, and go to state 61
+    UFNUM       shift, and go to state 62
+    CHAR        shift, and go to state 63
+    '+'         shift, and go to state 64
+    '-'         shift, and go to state 65
+
+    const_value  go to state 120
+
+
+state 92
+
+   54 type: ARRAY . '[' period ']' OF TYPE
+   55     | ARRAY . error period ']' OF TYPE
+   56     | ARRAY . '[' period ']' error TYPE
+   57     | ARRAY . '[' period ']' OF error
+   58     | ARRAY . error
+   59     | ARRAY . '[' error
+   60     | ARRAY . '[' period error
+
+    error  shift, and go to state 121
+    '['    shift, and go to state 122
+
+
+state 93
+
+   53 type: TYPE .
+
+    $default  reduce using rule 53 (type)
+
+
+state 94
+
+   52 var_declaration: idlist error type .
+
+    $default  reduce using rule 52 (var_declaration)
+
+
+state 95
+
+   51 var_declaration: idlist ':' error .
+
+    $default  reduce using rule 51 (var_declaration)
+
+
+state 96
+
+   47 var_declaration: idlist ':' type .
+
+    $default  reduce using rule 47 (var_declaration)
+
+
+state 97
+
+   19 idlist: idlist . ',' IDENTIFIER
+   48 var_declaration: var_declaration error idlist . ':' type
+
+    ','  shift, and go to state 55
+    ':'  shift, and go to state 123
+
+
+state 98
+
+   19 idlist: idlist . ',' IDENTIFIER
+   46 var_declaration: var_declaration ';' idlist . ':' type
+   49                | var_declaration ';' idlist . error type
+   50                | var_declaration ';' idlist . ':' error
+
+    error  shift, and go to state 124
+    ','    shift, and go to state 55
+    ':'    shift, and go to state 125
+
+
+state 99
+
+   77 subprogram_head: PROCEDURE error .
+
+    $default  reduce using rule 77 (subprogram_head)
+
+
+state 100
+
+   70 subprogram_head: PROCEDURE IDENTIFIER . formal_parameter
+
+    '('  shift, and go to state 126
+
+    $default  reduce using rule 79 (formal_parameter)
+
+    formal_parameter  go to state 127
+
+
+state 101
+
+   72 subprogram_head: FUNCTION error . formal_parameter ':' TYPE
+   76                | FUNCTION error .
+
+    '('  shift, and go to state 126
+
+    ':'       reduce using rule 79 (formal_parameter)
+    $default  reduce using rule 76 (subprogram_head)
+
+    formal_parameter  go to state 128
+
+
+state 102
+
+   71 subprogram_head: FUNCTION IDENTIFIER . formal_parameter ':' TYPE
+   73                | FUNCTION IDENTIFIER . formal_parameter error TYPE
+   74                | FUNCTION IDENTIFIER . formal_parameter ':' error
+   75                | FUNCTION IDENTIFIER . formal_parameter error
+
+    '('  shift, and go to state 126
+
+    $default  reduce using rule 79 (formal_parameter)
+
+    formal_parameter  go to state 129
+
+
+state 103
+
+  102 statement: IF . expression THEN statement else_part
+  103          | IF . expression error statement else_part
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable           go to state 137
+    expression         go to state 138
+    simple_expression  go to state 139
+    term               go to state 140
+    factor             go to state 141
+
+
+state 104
+
+  104 statement: FOR . IDENTIFIER ASSIGNOP expression TO expression DO statement
+  105          | FOR . IDENTIFIER error expression TO expression DO statement
+  106          | FOR . IDENTIFIER ASSIGNOP expression error expression DO statement
+  107          | FOR . IDENTIFIER ASSIGNOP expression TO expression error statement
+
+    IDENTIFIER  shift, and go to state 142
+
+
+state 105
+
+  110 statement: REPEAT . statement UNTIL expression
+  111          | REPEAT . statement error expression
+
+    _BEGIN      shift, and go to state 78
+    IF          shift, and go to state 103
+    FOR         shift, and go to state 104
+    REPEAT      shift, and go to state 105
+    WHILE       shift, and go to state 106
+    IDENTIFIER  shift, and go to state 107
+
+    $default  reduce using rule 112 (statement)
+
+    compound_statement  go to state 108
+    statement           go to state 143
+    variable            go to state 111
+    procedure_call      go to state 112
+
+
+state 106
+
+  108 statement: WHILE . expression DO statement
+  109          | WHILE . expression error statement
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable           go to state 137
+    expression         go to state 144
+    simple_expression  go to state 139
+    term               go to state 140
+    factor             go to state 141
+
+
+state 107
+
+  115 variable: IDENTIFIER . id_varpart
+  120 procedure_call: IDENTIFIER .
+  121               | IDENTIFIER . '(' expression_list ')'
+  122               | IDENTIFIER . '(' expression_list error
+
+    '('  shift, and go to state 145
+    '['  shift, and go to state 146
+
+    ASSIGNOP  reduce using rule 119 (id_varpart)
+    $default  reduce using rule 120 (procedure_call)
+
+    id_varpart  go to state 147
+
+
+state 108
+
+  101 statement: compound_statement .
+
+    $default  reduce using rule 101 (statement)
+
+
+state 109
+
+   94 compound_statement: _BEGIN statement_list . END
+   95                   | _BEGIN statement_list . error
+   96 statement_list: statement_list . ';' statement
+   97               | statement_list . error statement
+
+    error  shift, and go to state 148
+    END    shift, and go to state 149
+    ';'    shift, and go to state 150
+
+
+state 110
+
+   98 statement_list: statement .
+
+    $default  reduce using rule 98 (statement_list)
+
+
+state 111
+
+   99 statement: variable . ASSIGNOP expression
+
+    ASSIGNOP  shift, and go to state 151
+
+
+state 112
+
+  100 statement: procedure_call .
+
+    $default  reduce using rule 100 (statement)
+
+
+state 113
+
+   66 subprogram_declarations: subprogram_declarations subprogram error .
+
+    $default  reduce using rule 66 (subprogram_declarations)
+
+
+state 114
+
+   65 subprogram_declarations: subprogram_declarations subprogram ';' .
+
+    $default  reduce using rule 65 (subprogram_declarations)
+
+
+state 115
+
+   69 subprogram: subprogram_head error . subprogram_body
+
+    CONST  shift, and go to state 12
+
+    $default  reduce using rule 22 (const_declarations)
+
+    const_declarations  go to state 152
+    subprogram_body     go to state 153
+
+
+state 116
+
+   68 subprogram: subprogram_head ';' . subprogram_body
+
+    CONST  shift, and go to state 12
+
+    $default  reduce using rule 22 (const_declarations)
+
+    const_declarations  go to state 152
+    subprogram_body     go to state 154
+
+
+state 117
+
+   29 const_declaration: const_declaration error IDENTIFIER '=' const_value .
+
+    $default  reduce using rule 29 (const_declaration)
+
+
+state 118
+
+   30 const_declaration: const_declaration ';' IDENTIFIER error const_value .
+
+    $default  reduce using rule 30 (const_declaration)
+
+
+state 119
+
+   26 const_declaration: const_declaration ';' IDENTIFIER '=' error .
+
+    $default  reduce using rule 26 (const_declaration)
+
+
+state 120
+
+   25 const_declaration: const_declaration ';' IDENTIFIER '=' const_value .
+
+    $default  reduce using rule 25 (const_declaration)
+
+
+state 121
+
+   55 type: ARRAY error . period ']' OF TYPE
+   58     | ARRAY error .
+
+    UINUM  shift, and go to state 155
+
+    $default  reduce using rule 58 (type)
+
+    period  go to state 156
+
+
+state 122
+
+   54 type: ARRAY '[' . period ']' OF TYPE
+   56     | ARRAY '[' . period ']' error TYPE
+   57     | ARRAY '[' . period ']' OF error
+   59     | ARRAY '[' . error
+   60     | ARRAY '[' . period error
+
+    error  shift, and go to state 157
+    UINUM  shift, and go to state 155
+
+    period  go to state 158
+
+
+state 123
+
+   48 var_declaration: var_declaration error idlist ':' . type
+
+    ARRAY  shift, and go to state 92
+    TYPE   shift, and go to state 93
+
+    type  go to state 159
+
+
+state 124
+
+   49 var_declaration: var_declaration ';' idlist error . type
+
+    ARRAY  shift, and go to state 92
+    TYPE   shift, and go to state 93
+
+    type  go to state 160
+
+
+state 125
+
+   46 var_declaration: var_declaration ';' idlist ':' . type
+   50                | var_declaration ';' idlist ':' . error
+
+    error  shift, and go to state 161
+    ARRAY  shift, and go to state 92
+    TYPE   shift, and go to state 93
+
+    type  go to state 162
+
+
+state 126
+
+   78 formal_parameter: '(' . parameter_list ')'
+   80                 | '(' . error
+   81                 | '(' . parameter_list error
+
+    error       shift, and go to state 163
+    VAR         shift, and go to state 164
+    IDENTIFIER  shift, and go to state 32
+
+    idlist           go to state 165
+    parameter_list   go to state 166
+    parameter        go to state 167
+    var_parameter    go to state 168
+    value_parameter  go to state 169
+
+
+state 127
+
+   70 subprogram_head: PROCEDURE IDENTIFIER formal_parameter .
+
+    $default  reduce using rule 70 (subprogram_head)
+
+
+state 128
+
+   72 subprogram_head: FUNCTION error formal_parameter . ':' TYPE
+
+    ':'  shift, and go to state 170
+
+
+state 129
+
+   71 subprogram_head: FUNCTION IDENTIFIER formal_parameter . ':' TYPE
+   73                | FUNCTION IDENTIFIER formal_parameter . error TYPE
+   74                | FUNCTION IDENTIFIER formal_parameter . ':' error
+   75                | FUNCTION IDENTIFIER formal_parameter . error
+
+    error  shift, and go to state 171
+    ':'    shift, and go to state 172
+
+
+state 130
+
+  115 variable: IDENTIFIER . id_varpart
+  140 factor: IDENTIFIER . '(' expression_list ')'
+  141       | IDENTIFIER . '(' expression_list error
+  142       | IDENTIFIER . '(' error
+
+    '('  shift, and go to state 173
+    '['  shift, and go to state 146
+
+    $default  reduce using rule 119 (id_varpart)
+
+    id_varpart  go to state 147
+
+
+state 131
+
+  137 factor: UINUM .
+
+    $default  reduce using rule 137 (factor)
+
+
+state 132
+
+  138 factor: UFNUM .
+
+    $default  reduce using rule 138 (factor)
+
+
+state 133
+
+  147 factor: CHAR .
+
+    $default  reduce using rule 147 (factor)
+
+
+state 134
+
+  145 factor: NOT . factor
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable  go to state 137
+    factor    go to state 174
+
+
+state 135
+
+  146 factor: '-' . factor
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable  go to state 137
+    factor    go to state 175
+
+
+state 136
+
+  143 factor: '(' . expression ')'
+  144       | '(' . expression error
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable           go to state 137
+    expression         go to state 176
+    simple_expression  go to state 139
+    term               go to state 140
+    factor             go to state 141
+
+
+state 137
+
+  139 factor: variable .
+
+    $default  reduce using rule 139 (factor)
+
+
+state 138
+
+  102 statement: IF expression . THEN statement else_part
+  103          | IF expression . error statement else_part
+
+    error  shift, and go to state 177
+    THEN   shift, and go to state 178
+
+
+state 139
+
+  126 expression: simple_expression . RELOP simple_expression
+  127           | simple_expression . '=' simple_expression
+  128           | simple_expression .
+  129 simple_expression: simple_expression . ADDOP term
+  130                  | simple_expression . ADDOP error term
+  131                  | simple_expression . '-' term
+  132                  | simple_expression . '-' error term
+
+    RELOP  shift, and go to state 179
+    ADDOP  shift, and go to state 180
+    '-'    shift, and go to state 181
+    '='    shift, and go to state 182
+
+    $default  reduce using rule 128 (expression)
+
+
+state 140
+
+  133 simple_expression: term .
+  134 term: term . MULOP factor
+  135     | term . MULOP error factor
+
+    MULOP  shift, and go to state 183
+
+    $default  reduce using rule 133 (simple_expression)
+
+
+state 141
+
+  136 term: factor .
+
+    $default  reduce using rule 136 (term)
+
+
+state 142
+
+  104 statement: FOR IDENTIFIER . ASSIGNOP expression TO expression DO statement
+  105          | FOR IDENTIFIER . error expression TO expression DO statement
+  106          | FOR IDENTIFIER . ASSIGNOP expression error expression DO statement
+  107          | FOR IDENTIFIER . ASSIGNOP expression TO expression error statement
+
+    error     shift, and go to state 184
+    ASSIGNOP  shift, and go to state 185
+
+
+state 143
+
+  110 statement: REPEAT statement . UNTIL expression
+  111          | REPEAT statement . error expression
+
+    error  shift, and go to state 186
+    UNTIL  shift, and go to state 187
+
+
+state 144
+
+  108 statement: WHILE expression . DO statement
+  109          | WHILE expression . error statement
+
+    error  shift, and go to state 188
+    DO     shift, and go to state 189
+
+
+state 145
+
+  121 procedure_call: IDENTIFIER '(' . expression_list ')'
+  122               | IDENTIFIER '(' . expression_list error
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable           go to state 137
+    expression_list    go to state 190
+    expression         go to state 191
+    simple_expression  go to state 139
+    term               go to state 140
+    factor             go to state 141
+
+
+state 146
+
+  116 id_varpart: '[' . expression_list ']'
+  117           | '[' . error
+  118           | '[' . expression_list error
+
+    error       shift, and go to state 192
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable           go to state 137
+    expression_list    go to state 193
+    expression         go to state 191
+    simple_expression  go to state 139
+    term               go to state 140
+    factor             go to state 141
+
+
+state 147
+
+  115 variable: IDENTIFIER id_varpart .
+
+    $default  reduce using rule 115 (variable)
+
+
+state 148
+
+   95 compound_statement: _BEGIN statement_list error .
+   97 statement_list: statement_list error . statement
+
+    _BEGIN      shift, and go to state 78
+    IF          shift, and go to state 103
+    FOR         shift, and go to state 104
+    REPEAT      shift, and go to state 105
+    WHILE       shift, and go to state 106
+    IDENTIFIER  shift, and go to state 107
+
+    error     reduce using rule 95 (compound_statement)
+    error     [reduce using rule 112 (statement)]
+    END       reduce using rule 95 (compound_statement)
+    END       [reduce using rule 112 (statement)]
+    ';'       reduce using rule 95 (compound_statement)
+    ';'       [reduce using rule 112 (statement)]
+    $default  reduce using rule 95 (compound_statement)
+
+    compound_statement  go to state 108
+    statement           go to state 194
+    variable            go to state 111
+    procedure_call      go to state 112
+
+
+state 149
+
+   94 compound_statement: _BEGIN statement_list END .
+
+    $default  reduce using rule 94 (compound_statement)
+
+
+state 150
+
+   96 statement_list: statement_list ';' . statement
+
+    _BEGIN      shift, and go to state 78
+    IF          shift, and go to state 103
+    FOR         shift, and go to state 104
+    REPEAT      shift, and go to state 105
+    WHILE       shift, and go to state 106
+    IDENTIFIER  shift, and go to state 107
+
+    $default  reduce using rule 112 (statement)
+
+    compound_statement  go to state 108
+    statement           go to state 195
+    variable            go to state 111
+    procedure_call      go to state 112
+
+
+state 151
+
+   99 statement: variable ASSIGNOP . expression
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable           go to state 137
+    expression         go to state 196
+    simple_expression  go to state 139
+    term               go to state 140
+    factor             go to state 141
+
+
+state 152
+
+   93 subprogram_body: const_declarations . var_declarations compound_statement
+
+    VAR  shift, and go to state 27
+
+    $default  reduce using rule 43 (var_declarations)
+
+    var_declarations  go to state 197
+
+
+state 153
+
+   69 subprogram: subprogram_head error subprogram_body .
+
+    $default  reduce using rule 69 (subprogram)
+
+
+state 154
+
+   68 subprogram: subprogram_head ';' subprogram_body .
+
+    $default  reduce using rule 68 (subprogram)
+
+
+state 155
+
+   64 period: UINUM . RANGEDOT UINUM
+
+    RANGEDOT  shift, and go to state 198
+
+
+state 156
+
+   55 type: ARRAY error period . ']' OF TYPE
+   61 period: period . ',' UINUM RANGEDOT UINUM
+   62       | period . error UINUM RANGEDOT UINUM
+   63       | period . ',' UINUM error UINUM
+
+    error  shift, and go to state 199
+    ','    shift, and go to state 200
+    ']'    shift, and go to state 201
+
+
+state 157
+
+   59 type: ARRAY '[' error .
+
+    $default  reduce using rule 59 (type)
+
+
+state 158
+
+   54 type: ARRAY '[' period . ']' OF TYPE
+   56     | ARRAY '[' period . ']' error TYPE
+   57     | ARRAY '[' period . ']' OF error
+   60     | ARRAY '[' period . error
+   61 period: period . ',' UINUM RANGEDOT UINUM
+   62       | period . error UINUM RANGEDOT UINUM
+   63       | period . ',' UINUM error UINUM
+
+    error  shift, and go to state 202
+    ','    shift, and go to state 200
+    ']'    shift, and go to state 203
+
+
+state 159
+
+   48 var_declaration: var_declaration error idlist ':' type .
+
+    $default  reduce using rule 48 (var_declaration)
+
+
+state 160
+
+   49 var_declaration: var_declaration ';' idlist error type .
+
+    $default  reduce using rule 49 (var_declaration)
+
+
+state 161
+
+   50 var_declaration: var_declaration ';' idlist ':' error .
+
+    $default  reduce using rule 50 (var_declaration)
+
+
+state 162
+
+   46 var_declaration: var_declaration ';' idlist ':' type .
+
+    $default  reduce using rule 46 (var_declaration)
+
+
+state 163
+
+   80 formal_parameter: '(' error .
+
+    $default  reduce using rule 80 (formal_parameter)
+
+
+state 164
+
+   87 var_parameter: VAR . value_parameter
+   88              | VAR . error
+
+    error       shift, and go to state 204
+    IDENTIFIER  shift, and go to state 32
+
+    idlist           go to state 165
+    value_parameter  go to state 205
+
+
+state 165
+
+   19 idlist: idlist . ',' IDENTIFIER
+   89 value_parameter: idlist . ':' TYPE
+   90                | idlist . error TYPE
+   91                | idlist . ':' error
+   92                | idlist . error
+
+    error  shift, and go to state 206
+    ','    shift, and go to state 55
+    ':'    shift, and go to state 207
+
+
+state 166
+
+   78 formal_parameter: '(' parameter_list . ')'
+   81                 | '(' parameter_list . error
+   82 parameter_list: parameter_list . ';' parameter
+   83               | parameter_list . error parameter
+
+    error  shift, and go to state 208
+    ';'    shift, and go to state 209
+    ')'    shift, and go to state 210
+
+
+state 167
+
+   84 parameter_list: parameter .
+
+    $default  reduce using rule 84 (parameter_list)
+
+
+state 168
+
+   85 parameter: var_parameter .
+
+    $default  reduce using rule 85 (parameter)
+
+
+state 169
+
+   86 parameter: value_parameter .
+
+    $default  reduce using rule 86 (parameter)
+
+
+state 170
+
+   72 subprogram_head: FUNCTION error formal_parameter ':' . TYPE
+
+    TYPE  shift, and go to state 211
+
+
+state 171
+
+   73 subprogram_head: FUNCTION IDENTIFIER formal_parameter error . TYPE
+   75                | FUNCTION IDENTIFIER formal_parameter error .
+
+    TYPE  shift, and go to state 212
+
+    $default  reduce using rule 75 (subprogram_head)
+
+
+state 172
+
+   71 subprogram_head: FUNCTION IDENTIFIER formal_parameter ':' . TYPE
+   74                | FUNCTION IDENTIFIER formal_parameter ':' . error
+
+    error  shift, and go to state 213
+    TYPE   shift, and go to state 214
+
+
+state 173
+
+  140 factor: IDENTIFIER '(' . expression_list ')'
+  141       | IDENTIFIER '(' . expression_list error
+  142       | IDENTIFIER '(' . error
+
+    error       shift, and go to state 215
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable           go to state 137
+    expression_list    go to state 216
+    expression         go to state 191
+    simple_expression  go to state 139
+    term               go to state 140
+    factor             go to state 141
+
+
+state 174
+
+  145 factor: NOT factor .
+
+    $default  reduce using rule 145 (factor)
+
+
+state 175
+
+  146 factor: '-' factor .
+
+    $default  reduce using rule 146 (factor)
+
+
+state 176
+
+  143 factor: '(' expression . ')'
+  144       | '(' expression . error
+
+    error  shift, and go to state 217
+    ')'    shift, and go to state 218
+
+
+state 177
+
+  103 statement: IF expression error . statement else_part
+
+    _BEGIN      shift, and go to state 78
+    IF          shift, and go to state 103
+    FOR         shift, and go to state 104
+    REPEAT      shift, and go to state 105
+    WHILE       shift, and go to state 106
+    IDENTIFIER  shift, and go to state 107
+
+    $default  reduce using rule 112 (statement)
+
+    compound_statement  go to state 108
+    statement           go to state 219
+    variable            go to state 111
+    procedure_call      go to state 112
+
+
+state 178
+
+  102 statement: IF expression THEN . statement else_part
+
+    _BEGIN      shift, and go to state 78
+    IF          shift, and go to state 103
+    FOR         shift, and go to state 104
+    REPEAT      shift, and go to state 105
+    WHILE       shift, and go to state 106
+    IDENTIFIER  shift, and go to state 107
+
+    $default  reduce using rule 112 (statement)
+
+    compound_statement  go to state 108
+    statement           go to state 220
+    variable            go to state 111
+    procedure_call      go to state 112
+
+
+state 179
+
+  126 expression: simple_expression RELOP . simple_expression
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable           go to state 137
+    simple_expression  go to state 221
+    term               go to state 140
+    factor             go to state 141
+
+
+state 180
+
+  129 simple_expression: simple_expression ADDOP . term
+  130                  | simple_expression ADDOP . error term
+
+    error       shift, and go to state 222
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable  go to state 137
+    term      go to state 223
+    factor    go to state 141
+
+
+state 181
+
+  131 simple_expression: simple_expression '-' . term
+  132                  | simple_expression '-' . error term
+
+    error       shift, and go to state 224
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable  go to state 137
+    term      go to state 225
+    factor    go to state 141
+
+
+state 182
+
+  127 expression: simple_expression '=' . simple_expression
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable           go to state 137
+    simple_expression  go to state 226
+    term               go to state 140
+    factor             go to state 141
+
+
+state 183
+
+  134 term: term MULOP . factor
+  135     | term MULOP . error factor
+
+    error       shift, and go to state 227
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable  go to state 137
+    factor    go to state 228
+
+
+state 184
+
+  105 statement: FOR IDENTIFIER error . expression TO expression DO statement
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable           go to state 137
+    expression         go to state 229
+    simple_expression  go to state 139
+    term               go to state 140
+    factor             go to state 141
+
+
+state 185
+
+  104 statement: FOR IDENTIFIER ASSIGNOP . expression TO expression DO statement
+  106          | FOR IDENTIFIER ASSIGNOP . expression error expression DO statement
+  107          | FOR IDENTIFIER ASSIGNOP . expression TO expression error statement
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable           go to state 137
+    expression         go to state 230
+    simple_expression  go to state 139
+    term               go to state 140
+    factor             go to state 141
+
+
+state 186
+
+  111 statement: REPEAT statement error . expression
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable           go to state 137
+    expression         go to state 231
+    simple_expression  go to state 139
+    term               go to state 140
+    factor             go to state 141
+
+
+state 187
+
+  110 statement: REPEAT statement UNTIL . expression
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable           go to state 137
+    expression         go to state 232
+    simple_expression  go to state 139
+    term               go to state 140
+    factor             go to state 141
+
+
+state 188
+
+  109 statement: WHILE expression error . statement
+
+    _BEGIN      shift, and go to state 78
+    IF          shift, and go to state 103
+    FOR         shift, and go to state 104
+    REPEAT      shift, and go to state 105
+    WHILE       shift, and go to state 106
+    IDENTIFIER  shift, and go to state 107
+
+    $default  reduce using rule 112 (statement)
+
+    compound_statement  go to state 108
+    statement           go to state 233
+    variable            go to state 111
+    procedure_call      go to state 112
+
+
+state 189
+
+  108 statement: WHILE expression DO . statement
+
+    _BEGIN      shift, and go to state 78
+    IF          shift, and go to state 103
+    FOR         shift, and go to state 104
+    REPEAT      shift, and go to state 105
+    WHILE       shift, and go to state 106
+    IDENTIFIER  shift, and go to state 107
+
+    $default  reduce using rule 112 (statement)
+
+    compound_statement  go to state 108
+    statement           go to state 234
+    variable            go to state 111
+    procedure_call      go to state 112
+
+
+state 190
+
+  121 procedure_call: IDENTIFIER '(' expression_list . ')'
+  122               | IDENTIFIER '(' expression_list . error
+  123 expression_list: expression_list . ',' expression
+  125                | expression_list . error expression
+
+    error  shift, and go to state 235
+    ')'    shift, and go to state 236
+    ','    shift, and go to state 237
+
+
+state 191
+
+  124 expression_list: expression .
+
+    $default  reduce using rule 124 (expression_list)
+
+
+state 192
+
+  117 id_varpart: '[' error .
+
+    $default  reduce using rule 117 (id_varpart)
+
+
+state 193
+
+  116 id_varpart: '[' expression_list . ']'
+  118           | '[' expression_list . error
+  123 expression_list: expression_list . ',' expression
+  125                | expression_list . error expression
+
+    error  shift, and go to state 238
+    ','    shift, and go to state 237
+    ']'    shift, and go to state 239
+
+
+state 194
+
+   97 statement_list: statement_list error statement .
+
+    $default  reduce using rule 97 (statement_list)
+
+
+state 195
+
+   96 statement_list: statement_list ';' statement .
+
+    $default  reduce using rule 96 (statement_list)
+
+
+state 196
+
+   99 statement: variable ASSIGNOP expression .
+
+    $default  reduce using rule 99 (statement)
+
+
+state 197
+
+   93 subprogram_body: const_declarations var_declarations . compound_statement
+
+    _BEGIN  shift, and go to state 78
+
+    compound_statement  go to state 240
+
+
+state 198
+
+   64 period: UINUM RANGEDOT . UINUM
+
+    UINUM  shift, and go to state 241
+
+
+state 199
+
+   62 period: period error . UINUM RANGEDOT UINUM
+
+    UINUM  shift, and go to state 242
+
+
+state 200
+
+   61 period: period ',' . UINUM RANGEDOT UINUM
+   63       | period ',' . UINUM error UINUM
+
+    UINUM  shift, and go to state 243
+
+
+state 201
+
+   55 type: ARRAY error period ']' . OF TYPE
+
+    OF  shift, and go to state 244
+
+
+state 202
+
+   60 type: ARRAY '[' period error .
+   62 period: period error . UINUM RANGEDOT UINUM
+
+    UINUM  shift, and go to state 242
+
+    $default  reduce using rule 60 (type)
+
+
+state 203
+
+   54 type: ARRAY '[' period ']' . OF TYPE
+   56     | ARRAY '[' period ']' . error TYPE
+   57     | ARRAY '[' period ']' . OF error
+
+    error  shift, and go to state 245
+    OF     shift, and go to state 246
+
+
+state 204
+
+   88 var_parameter: VAR error .
+
+    $default  reduce using rule 88 (var_parameter)
+
+
+state 205
+
+   87 var_parameter: VAR value_parameter .
+
+    $default  reduce using rule 87 (var_parameter)
+
+
+state 206
+
+   90 value_parameter: idlist error . TYPE
+   92                | idlist error .
+
+    TYPE  shift, and go to state 247
+
+    $default  reduce using rule 92 (value_parameter)
+
+
+state 207
+
+   89 value_parameter: idlist ':' . TYPE
+   91                | idlist ':' . error
+
+    error  shift, and go to state 248
+    TYPE   shift, and go to state 249
+
+
+state 208
+
+   81 formal_parameter: '(' parameter_list error .
+   83 parameter_list: parameter_list error . parameter
+
+    VAR         shift, and go to state 164
+    IDENTIFIER  shift, and go to state 32
+
+    $default  reduce using rule 81 (formal_parameter)
+
+    idlist           go to state 165
+    parameter        go to state 250
+    var_parameter    go to state 168
+    value_parameter  go to state 169
+
+
+state 209
+
+   82 parameter_list: parameter_list ';' . parameter
+
+    VAR         shift, and go to state 164
+    IDENTIFIER  shift, and go to state 32
+
+    idlist           go to state 165
+    parameter        go to state 251
+    var_parameter    go to state 168
+    value_parameter  go to state 169
+
+
+state 210
+
+   78 formal_parameter: '(' parameter_list ')' .
+
+    $default  reduce using rule 78 (formal_parameter)
+
+
+state 211
+
+   72 subprogram_head: FUNCTION error formal_parameter ':' TYPE .
+
+    $default  reduce using rule 72 (subprogram_head)
+
+
+state 212
+
+   73 subprogram_head: FUNCTION IDENTIFIER formal_parameter error TYPE .
+
+    $default  reduce using rule 73 (subprogram_head)
+
+
+state 213
+
+   74 subprogram_head: FUNCTION IDENTIFIER formal_parameter ':' error .
+
+    $default  reduce using rule 74 (subprogram_head)
+
+
+state 214
+
+   71 subprogram_head: FUNCTION IDENTIFIER formal_parameter ':' TYPE .
+
+    $default  reduce using rule 71 (subprogram_head)
+
+
+state 215
+
+  142 factor: IDENTIFIER '(' error .
+
+    $default  reduce using rule 142 (factor)
+
+
+state 216
+
+  123 expression_list: expression_list . ',' expression
+  125                | expression_list . error expression
+  140 factor: IDENTIFIER '(' expression_list . ')'
+  141       | IDENTIFIER '(' expression_list . error
+
+    error  shift, and go to state 252
+    ')'    shift, and go to state 253
+    ','    shift, and go to state 237
+
+
+state 217
+
+  144 factor: '(' expression error .
+
+    $default  reduce using rule 144 (factor)
+
+
+state 218
+
+  143 factor: '(' expression ')' .
+
+    $default  reduce using rule 143 (factor)
+
+
+state 219
+
+  103 statement: IF expression error statement . else_part
+
+    ELSE  shift, and go to state 254
+
+    $default  reduce using rule 114 (else_part)
+
+    else_part  go to state 255
+
+
+state 220
+
+  102 statement: IF expression THEN statement . else_part
+
+    ELSE  shift, and go to state 254
+
+    $default  reduce using rule 114 (else_part)
+
+    else_part  go to state 256
+
+
+state 221
+
+  126 expression: simple_expression RELOP simple_expression .
+  129 simple_expression: simple_expression . ADDOP term
+  130                  | simple_expression . ADDOP error term
+  131                  | simple_expression . '-' term
+  132                  | simple_expression . '-' error term
+
+    ADDOP  shift, and go to state 180
+    '-'    shift, and go to state 181
+
+    $default  reduce using rule 126 (expression)
+
+
+state 222
+
+  130 simple_expression: simple_expression ADDOP error . term
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable  go to state 137
+    term      go to state 257
+    factor    go to state 141
+
+
+state 223
+
+  129 simple_expression: simple_expression ADDOP term .
+  134 term: term . MULOP factor
+  135     | term . MULOP error factor
+
+    MULOP  shift, and go to state 183
+
+    $default  reduce using rule 129 (simple_expression)
+
+
+state 224
+
+  132 simple_expression: simple_expression '-' error . term
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable  go to state 137
+    term      go to state 258
+    factor    go to state 141
+
+
+state 225
+
+  131 simple_expression: simple_expression '-' term .
+  134 term: term . MULOP factor
+  135     | term . MULOP error factor
+
+    MULOP  shift, and go to state 183
+
+    $default  reduce using rule 131 (simple_expression)
+
+
+state 226
+
+  127 expression: simple_expression '=' simple_expression .
+  129 simple_expression: simple_expression . ADDOP term
+  130                  | simple_expression . ADDOP error term
+  131                  | simple_expression . '-' term
+  132                  | simple_expression . '-' error term
+
+    ADDOP  shift, and go to state 180
+    '-'    shift, and go to state 181
+
+    $default  reduce using rule 127 (expression)
+
+
+state 227
+
+  135 term: term MULOP error . factor
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable  go to state 137
+    factor    go to state 259
+
+
+state 228
+
+  134 term: term MULOP factor .
+
+    $default  reduce using rule 134 (term)
+
+
+state 229
+
+  105 statement: FOR IDENTIFIER error expression . TO expression DO statement
+
+    TO  shift, and go to state 260
+
+
+state 230
+
+  104 statement: FOR IDENTIFIER ASSIGNOP expression . TO expression DO statement
+  106          | FOR IDENTIFIER ASSIGNOP expression . error expression DO statement
+  107          | FOR IDENTIFIER ASSIGNOP expression . TO expression error statement
+
+    error  shift, and go to state 261
+    TO     shift, and go to state 262
+
+
+state 231
+
+  111 statement: REPEAT statement error expression .
+
+    $default  reduce using rule 111 (statement)
+
+
+state 232
+
+  110 statement: REPEAT statement UNTIL expression .
+
+    $default  reduce using rule 110 (statement)
+
+
+state 233
+
+  109 statement: WHILE expression error statement .
+
+    $default  reduce using rule 109 (statement)
+
+
+state 234
+
+  108 statement: WHILE expression DO statement .
+
+    $default  reduce using rule 108 (statement)
+
+
+state 235
+
+  122 procedure_call: IDENTIFIER '(' expression_list error .
+  125 expression_list: expression_list error . expression
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    $default  reduce using rule 122 (procedure_call)
+
+    variable           go to state 137
+    expression         go to state 263
+    simple_expression  go to state 139
+    term               go to state 140
+    factor             go to state 141
+
+
+state 236
+
+  121 procedure_call: IDENTIFIER '(' expression_list ')' .
+
+    $default  reduce using rule 121 (procedure_call)
+
+
+state 237
+
+  123 expression_list: expression_list ',' . expression
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable           go to state 137
+    expression         go to state 264
+    simple_expression  go to state 139
+    term               go to state 140
+    factor             go to state 141
+
+
+state 238
+
+  118 id_varpart: '[' expression_list error .
+  125 expression_list: expression_list error . expression
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    '-'       [reduce using rule 118 (id_varpart)]
+    $default  reduce using rule 118 (id_varpart)
+
+    variable           go to state 137
+    expression         go to state 263
+    simple_expression  go to state 139
+    term               go to state 140
+    factor             go to state 141
+
+
+state 239
+
+  116 id_varpart: '[' expression_list ']' .
+
+    $default  reduce using rule 116 (id_varpart)
+
+
+state 240
+
+   93 subprogram_body: const_declarations var_declarations compound_statement .
+
+    $default  reduce using rule 93 (subprogram_body)
+
+
+state 241
+
+   64 period: UINUM RANGEDOT UINUM .
+
+    $default  reduce using rule 64 (period)
+
+
+state 242
+
+   62 period: period error UINUM . RANGEDOT UINUM
+
+    RANGEDOT  shift, and go to state 265
+
+
+state 243
+
+   61 period: period ',' UINUM . RANGEDOT UINUM
+   63       | period ',' UINUM . error UINUM
+
+    error     shift, and go to state 266
+    RANGEDOT  shift, and go to state 267
+
+
+state 244
+
+   55 type: ARRAY error period ']' OF . TYPE
+
+    TYPE  shift, and go to state 268
+
+
+state 245
+
+   56 type: ARRAY '[' period ']' error . TYPE
+
+    TYPE  shift, and go to state 269
+
+
+state 246
+
+   54 type: ARRAY '[' period ']' OF . TYPE
+   57     | ARRAY '[' period ']' OF . error
+
+    error  shift, and go to state 270
+    TYPE   shift, and go to state 271
+
+
+state 247
+
+   90 value_parameter: idlist error TYPE .
+
+    $default  reduce using rule 90 (value_parameter)
+
+
+state 248
+
+   91 value_parameter: idlist ':' error .
+
+    $default  reduce using rule 91 (value_parameter)
+
+
+state 249
+
+   89 value_parameter: idlist ':' TYPE .
+
+    $default  reduce using rule 89 (value_parameter)
+
+
+state 250
+
+   83 parameter_list: parameter_list error parameter .
+
+    $default  reduce using rule 83 (parameter_list)
+
+
+state 251
+
+   82 parameter_list: parameter_list ';' parameter .
+
+    $default  reduce using rule 82 (parameter_list)
+
+
+state 252
+
+  125 expression_list: expression_list error . expression
+  141 factor: IDENTIFIER '(' expression_list error .
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    '-'       [reduce using rule 141 (factor)]
+    $default  reduce using rule 141 (factor)
+
+    variable           go to state 137
+    expression         go to state 263
+    simple_expression  go to state 139
+    term               go to state 140
+    factor             go to state 141
+
+
+state 253
+
+  140 factor: IDENTIFIER '(' expression_list ')' .
+
+    $default  reduce using rule 140 (factor)
+
+
+state 254
+
+  113 else_part: ELSE . statement
+
+    _BEGIN      shift, and go to state 78
+    IF          shift, and go to state 103
+    FOR         shift, and go to state 104
+    REPEAT      shift, and go to state 105
+    WHILE       shift, and go to state 106
+    IDENTIFIER  shift, and go to state 107
+
+    $default  reduce using rule 112 (statement)
+
+    compound_statement  go to state 108
+    statement           go to state 272
+    variable            go to state 111
+    procedure_call      go to state 112
+
+
+state 255
+
+  103 statement: IF expression error statement else_part .
+
+    $default  reduce using rule 103 (statement)
+
+
+state 256
+
+  102 statement: IF expression THEN statement else_part .
+
+    $default  reduce using rule 102 (statement)
+
+
+state 257
+
+  130 simple_expression: simple_expression ADDOP error term .
+  134 term: term . MULOP factor
+  135     | term . MULOP error factor
+
+    MULOP  shift, and go to state 183
+
+    $default  reduce using rule 130 (simple_expression)
+
+
+state 258
+
+  132 simple_expression: simple_expression '-' error term .
+  134 term: term . MULOP factor
+  135     | term . MULOP error factor
+
+    MULOP  shift, and go to state 183
+
+    $default  reduce using rule 132 (simple_expression)
+
+
+state 259
+
+  135 term: term MULOP error factor .
+
+    $default  reduce using rule 135 (term)
+
+
+state 260
+
+  105 statement: FOR IDENTIFIER error expression TO . expression DO statement
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable           go to state 137
+    expression         go to state 273
+    simple_expression  go to state 139
+    term               go to state 140
+    factor             go to state 141
+
+
+state 261
+
+  106 statement: FOR IDENTIFIER ASSIGNOP expression error . expression DO statement
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable           go to state 137
+    expression         go to state 274
+    simple_expression  go to state 139
+    term               go to state 140
+    factor             go to state 141
+
+
+state 262
+
+  104 statement: FOR IDENTIFIER ASSIGNOP expression TO . expression DO statement
+  107          | FOR IDENTIFIER ASSIGNOP expression TO . expression error statement
+
+    IDENTIFIER  shift, and go to state 130
+    UINUM       shift, and go to state 131
+    UFNUM       shift, and go to state 132
+    CHAR        shift, and go to state 133
+    NOT         shift, and go to state 134
+    '-'         shift, and go to state 135
+    '('         shift, and go to state 136
+
+    variable           go to state 137
+    expression         go to state 275
+    simple_expression  go to state 139
+    term               go to state 140
+    factor             go to state 141
+
+
+state 263
+
+  125 expression_list: expression_list error expression .
+
+    $default  reduce using rule 125 (expression_list)
+
+
+state 264
+
+  123 expression_list: expression_list ',' expression .
+
+    $default  reduce using rule 123 (expression_list)
+
+
+state 265
+
+   62 period: period error UINUM RANGEDOT . UINUM
+
+    UINUM  shift, and go to state 276
+
+
+state 266
+
+   63 period: period ',' UINUM error . UINUM
+
+    UINUM  shift, and go to state 277
+
+
+state 267
+
+   61 period: period ',' UINUM RANGEDOT . UINUM
+
+    UINUM  shift, and go to state 278
+
+
+state 268
+
+   55 type: ARRAY error period ']' OF TYPE .
+
+    $default  reduce using rule 55 (type)
+
+
+state 269
+
+   56 type: ARRAY '[' period ']' error TYPE .
+
+    $default  reduce using rule 56 (type)
+
+
+state 270
+
+   57 type: ARRAY '[' period ']' OF error .
+
+    $default  reduce using rule 57 (type)
+
+
+state 271
+
+   54 type: ARRAY '[' period ']' OF TYPE .
+
+    $default  reduce using rule 54 (type)
+
+
+state 272
+
+  113 else_part: ELSE statement .
+
+    $default  reduce using rule 113 (else_part)
+
+
+state 273
+
+  105 statement: FOR IDENTIFIER error expression TO expression . DO statement
+
+    DO  shift, and go to state 279
+
+
+state 274
+
+  106 statement: FOR IDENTIFIER ASSIGNOP expression error expression . DO statement
+
+    DO  shift, and go to state 280
+
+
+state 275
+
+  104 statement: FOR IDENTIFIER ASSIGNOP expression TO expression . DO statement
+  107          | FOR IDENTIFIER ASSIGNOP expression TO expression . error statement
+
+    error  shift, and go to state 281
+    DO     shift, and go to state 282
+
+
+state 276
+
+   62 period: period error UINUM RANGEDOT UINUM .
+
+    $default  reduce using rule 62 (period)
+
+
+state 277
+
+   63 period: period ',' UINUM error UINUM .
+
+    $default  reduce using rule 63 (period)
+
+
+state 278
+
+   61 period: period ',' UINUM RANGEDOT UINUM .
+
+    $default  reduce using rule 61 (period)
+
+
+state 279
+
+  105 statement: FOR IDENTIFIER error expression TO expression DO . statement
+
+    _BEGIN      shift, and go to state 78
+    IF          shift, and go to state 103
+    FOR         shift, and go to state 104
+    REPEAT      shift, and go to state 105
+    WHILE       shift, and go to state 106
+    IDENTIFIER  shift, and go to state 107
+
+    $default  reduce using rule 112 (statement)
+
+    compound_statement  go to state 108
+    statement           go to state 283
+    variable            go to state 111
+    procedure_call      go to state 112
+
+
+state 280
+
+  106 statement: FOR IDENTIFIER ASSIGNOP expression error expression DO . statement
+
+    _BEGIN      shift, and go to state 78
+    IF          shift, and go to state 103
+    FOR         shift, and go to state 104
+    REPEAT      shift, and go to state 105
+    WHILE       shift, and go to state 106
+    IDENTIFIER  shift, and go to state 107
+
+    $default  reduce using rule 112 (statement)
+
+    compound_statement  go to state 108
+    statement           go to state 284
+    variable            go to state 111
+    procedure_call      go to state 112
+
+
+state 281
+
+  107 statement: FOR IDENTIFIER ASSIGNOP expression TO expression error . statement
+
+    _BEGIN      shift, and go to state 78
+    IF          shift, and go to state 103
+    FOR         shift, and go to state 104
+    REPEAT      shift, and go to state 105
+    WHILE       shift, and go to state 106
+    IDENTIFIER  shift, and go to state 107
+
+    $default  reduce using rule 112 (statement)
+
+    compound_statement  go to state 108
+    statement           go to state 285
+    variable            go to state 111
+    procedure_call      go to state 112
+
+
+state 282
+
+  104 statement: FOR IDENTIFIER ASSIGNOP expression TO expression DO . statement
+
+    _BEGIN      shift, and go to state 78
+    IF          shift, and go to state 103
+    FOR         shift, and go to state 104
+    REPEAT      shift, and go to state 105
+    WHILE       shift, and go to state 106
+    IDENTIFIER  shift, and go to state 107
+
+    $default  reduce using rule 112 (statement)
+
+    compound_statement  go to state 108
+    statement           go to state 286
+    variable            go to state 111
+    procedure_call      go to state 112
+
+
+state 283
+
+  105 statement: FOR IDENTIFIER error expression TO expression DO statement .
+
+    $default  reduce using rule 105 (statement)
+
+
+state 284
+
+  106 statement: FOR IDENTIFIER ASSIGNOP expression error expression DO statement .
+
+    $default  reduce using rule 106 (statement)
+
+
+state 285
+
+  107 statement: FOR IDENTIFIER ASSIGNOP expression TO expression error statement .
+
+    $default  reduce using rule 107 (statement)
+
+
+state 286
+
+  104 statement: FOR IDENTIFIER ASSIGNOP expression TO expression DO statement .
+
+    $default  reduce using rule 104 (statement)
